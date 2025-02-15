@@ -3,96 +3,140 @@ class local_mysqli extends mysqli
 {
 	public function __construct($sys = NULL)
 	{
-		$host = getenv('DB_HOST') ?: 'localhost';
-		$user = getenv('DB_USER') ?: 'root';
-		$pass = getenv('DB_PASS') ?: '';
-		$db = getenv('DB_NAME') ?: 'test';
+		$host = defined("cHStr") ? constant("cHStr") : 'localhost';
+		$user = defined("cUserStr") ? constant("cUserStr") : 'root';
+		$pass = defined("cPassStr") ? constant("cPassStr") : '';
+		$db = defined("cBancoStr") ? constant("cBancoStr") : 'test';
 
-		if (!parent::real_connect($host, $user, $pass, $db)) {
-			throw new Exception('Connect Error (' . mysqli_connect_errno() . ') ' . mysqli_connect_error());
+		// Chamando o construtor da classe mysqli corretamente
+		parent::__construct($host, $user, $pass, $db);
+
+		if ($this->connect_errno) {
+			throw new Exception('Connect Error (' . $this->connect_errno . ') ' . $this->connect_error);
 		}
-		parent::set_charset("utf8mb4");
+
+		$this->set_charset("utf8mb4");
 	}
 
-	public function select(string $fields, string $table, string $options = ''): mysqli_result|bool
+	function select($fields, $table, $options)
 	{
-		$query = sprintf("SELECT %s FROM %s %s", $fields, $table, $options);
-		return $this->my_query($query);
+		$res = $this->my_query(
+			sprintf(
+				"SELECT %s FROM %s %s",
+				$fields,
+				$table,
+				$options
+			)
+		);
+		return $res;
 	}
 
-	public function insert(string $fields, string $table, string $options = ''): bool
+	function insert($fields, $table, $options)
 	{
-		$query = sprintf("INSERT INTO %s SET %s %s", $table, $fields, $options);
-		return $this->my_query($query);
+		return $this->my_query(
+			sprintf(
+				"INSERT INTO %s SET %s %s",
+				$table,
+				$fields,
+				$options
+			)
+		);
 	}
 
-	public function replace(string $fields, string $table): bool
+	function replace($fields, $table)
 	{
-		$query = sprintf("REPLACE INTO %s SET %s", $table, $fields);
-		return $this->my_query($query);
+		return $this->my_query(
+			sprintf(
+				"REPLACE INTO %s SET %s",
+				$table,
+				$fields
+			)
+		);
 	}
 
-	public function update(string $fields, string $table, string $options = ''): bool
+	function update($fields, $table, $options)
 	{
-		$query = sprintf("UPDATE %s SET %s %s", $table, $fields, $options);
-		return $this->my_query($query);
+		return $this->my_query(
+			sprintf(
+				"UPDATE %s SET %s %s",
+				$table,
+				$fields,
+				$options
+			)
+		);
 	}
 
-	public function delete(string $table, string $options = ''): bool
+	function delete($table, $options)
 	{
-		$query = sprintf("DELETE FROM %s %s", $table, $options);
-		return $this->my_query($query);
+		return $this->my_query(
+			sprintf(
+				"DELETE FROM %s %s",
+				$table,
+				$options
+			)
+		);
 	}
 
-	private function my_query(string $query): mysqli_result|bool
+	function my_query($query)
 	{
-		$result = $this->query($query);
-		if (!$result) {
-			throw new Exception("SQL error: $query \n " . $this->error);
-		}
-		return $result;
+		$r = $this->query($query) or die("SQL error: $query \n " . $this->error);
+		return $r;
 	}
 
-	public function recordcount(mysqli_result $res): int
+	function recordcount($res)
 	{
-		return $res->num_rows;
+		return is_object($res) ? (int)$res->num_rows : 0;
 	}
 
-	public function result(mysqli_result $res, string $name, int $position): mixed
+	function result($res, $name, $position)
 	{
+		if ($res === false) return false;
 		if ($position >= $res->num_rows) return false;
 		$res->data_seek($position);
 		$line = $res->fetch_array(MYSQLI_ASSOC);
-		return $line[$name] ?? false;
+		return isset($line[$name]) ? $line[$name] : false;
 	}
 
-	public function results(mysqli_result $res): array
+	function results($res)
 	{
-		$obj = [];
-		while ($row = $res->fetch_array(MYSQLI_ASSOC)) {
-			$obj[] = $row;
+		$obj = array();
+		if ((int)$this->recordcount($res) > 0) {
+			while ($row = $res->fetch_array(MYSQLI_ASSOC)) {
+				$obj[] = $row;
+			}
 		}
 		return $obj;
 	}
 
-	public function fields_config(string $table): array
+	function fields_config($table)
 	{
-		$object = [];
-		$res = $this->my_query(sprintf("SHOW COLUMNS FROM %s", $table));
+		$object = array();
+		$res = $this->my_query(
+			sprintf(
+				"SHOW COLUMNS FROM %s",
+				$table
+			)
+		);
 
-		foreach ($this->results($res) as $data) {
-			$field = $data["Field"];
-			$object[$field] = [
-				"PK" => $data["Key"] === "PRI",
-				"UNI" => $data["Key"] === "UNI",
-				"type" => $data["Type"],
-				"default" => $data["Default"] ?? null,
-				"auto_increment" => $data["Extra"] === "auto_increment"
-			];
-
+		foreach ($this->results($res) as $key => $data) {
+			if ($data["Key"] == "PRI") {
+				$object[$data["Field"]]["PK"] = true;
+			}
+			if ($data["Key"] == "UNI") {
+				$object[$data["Field"]]["UNI"] = true;
+			}
 			if (preg_match("/(?P<TYPE>\w+)\((?P<SIZE>.+)\)/", $data["Type"], $match)) {
-				$object[$field]["type"] = $match["TYPE"];
-				$object[$field]["size"] = $match["SIZE"];
+				$object[$data["Field"]]["type"] = $match["TYPE"];
+				$object[$data["Field"]]["size"] = $match["SIZE"];
+			} else {
+				$object[$data["Field"]]["type"] = $data["Type"];
+			}
+
+			if ($data["Default"] !== NULL) {
+				$object[$data["Field"]]["default"] = $data["Default"];
+			}
+			if ($data["Extra"] == "auto_increment") {
+				$object[$data["Field"]]["auto_increment"] = true;
 			}
 		}
 		return $object;

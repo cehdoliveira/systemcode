@@ -27,7 +27,7 @@ $btn_remove = filter_input(INPUT_POST, 'btn_remove') !== null;
 $strCanal = '';
 $dispatcher = new dispatcher(true);
 $dispatcher->add_route('GET', '/(index(\.json|\.xml|\.html)).*?', 'function:basic_redir', null, $GLOBALS['home_url']);
-$dispatcher->add_route('GET', '/?', 'site_controller:display', null, $params);
+$dispatcher->add_route('GET', '/?', 'setup_controller:display', null, $params);
 
 if (!$dispatcher->exec()) {
 	basic_redir($GLOBALS['home_url']);

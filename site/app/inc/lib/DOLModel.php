@@ -13,7 +13,7 @@ class DOLModel extends rootOBJ
 	private $paginate;
 	private $order;
 	private $group;
-	private $data;
+	public $data;
 	private $recordset;
 
 	public function __construct(string $table)

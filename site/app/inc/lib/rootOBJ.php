@@ -2,6 +2,7 @@
 class rootOBJ
 {
 	public $data = [];
+	private $properties = [];
 
 	public function __call(string $method, array $parameters)
 	{
@@ -9,10 +10,10 @@ class rootOBJ
 			$var = $match["method"];
 			switch ($match["type"]) {
 				case 'set':
-					$this->$var = $parameters[0];
+					$this->properties[$var] = $parameters[0];
 					break;
 				case 'get':
-					return $this->$var;
+					return $this->properties[$var] ?? null;
 					break;
 			}
 		}
