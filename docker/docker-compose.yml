@@ -1,0 +1,44 @@
+services:
+  apache_systemcode:
+    build: ./site/
+    container_name: apache_systemcode
+    depends_on:
+      - mysql_systemcode
+    volumes:
+      - ../_data/logs/:/var/log/
+      - ../site/public_html/:/var/www/systemcode/public_html/
+      - ../site/app/:/var/www/systemcode/app/
+      - ../site/cgi-bin/:/var/www/systemcode/cgi-bin/
+      - ../upload/:/var/www/systemcode/gerenciador/httpdocs/furniture/upload/
+      - ../upload/:/var/www/systemcode/public_html/furniture/upload/
+    ports:
+      - "80:80"
+    networks:
+      systemcode:
+        ipv4_address: 172.29.0.3
+  # Data Layer
+  mysql_systemcode:
+    image: mysql:8.0
+    container_name: mysql_systemcode
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password --sql_mode=""
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=mysql_systemcode
+      - MYSQL_USER=user_systemcode
+      - MYSQL_PASSWORD=123456
+    volumes:
+      - ../_data/mysql-data/:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    expose:
+      - "3306"
+    networks:
+      systemcode:
+        ipv4_address: 172.29.0.2
+networks:
+  systemcode:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.29.0.0/16

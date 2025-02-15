@@ -1,0 +1,5 @@
+# Ignorar a pasta _data
+_data/
+
+# Ignorar o arquivo global.php
+site/app/inc/global.php

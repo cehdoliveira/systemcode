@@ -1,0 +1,17 @@
+{
+    "name": "cehdoliveira/lib",
+    "autoload": {
+        "psr-4": {
+            "Cehdoliveira\\Lib\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Carlos Oliveira",
+            "email": "cehd.oliveira@gmail.com"
+        }
+    ],
+    "require": {
+        "binance/binance-connector-php": "^1.7"
+    }
+}
