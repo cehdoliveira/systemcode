@@ -9,7 +9,6 @@ services:
       - ../site/public_html/:/var/www/systemcode/public_html/
       - ../site/app/:/var/www/systemcode/app/
       - ../site/cgi-bin/:/var/www/systemcode/cgi-bin/
-      - ../upload/:/var/www/systemcode/gerenciador/httpdocs/furniture/upload/
       - ../upload/:/var/www/systemcode/public_html/furniture/upload/
     ports:
       - "80:80"

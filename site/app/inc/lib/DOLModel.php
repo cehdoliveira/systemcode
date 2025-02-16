@@ -47,10 +47,10 @@ class DOLModel extends rootOBJ
 				if (isset($this->filter) && is_array($this->filter)) {
 					$fi = " where " . implode(" and ", $this->filter) . " ";
 					$pa = $this->paginate ? " limit " . implode(" , ", $this->paginate) . " " : "";
-					$ff .= ", modified_at = now(), modified_by = '" . $this->con->real_escape_string($_SESSION[constant("cAppKey")]["credential"]["idx"] ?? 0) . "'";
+					$ff .= ", modified_at = now(), modified_by = '" . $this->con->real_escape_string((string)($_SESSION[constant("cAppKey")]["credential"]["idx"] ?? 0)) . "'";
 					return $this->con->update($ff, $this->table, $fi . $pa);
 				} else {
-					$ff .= ", created_at = now(), created_by = '" . $this->con->real_escape_string($_SESSION[constant("cAppKey")]["credential"]["idx"] ?? 0) . "'";
+					$ff .= ", created_at = now(), created_by = '" . $this->con->real_escape_string((string)($_SESSION[constant("cAppKey")]["credential"]["idx"] ?? 0)) . "'";
 					return $this->con->insert($ff, $this->table, null);
 				}
 			}
